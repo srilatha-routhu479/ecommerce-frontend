@@ -1,4 +1,4 @@
-// src/pages/ProductList.jsx
+// src/pages/Products.jsx
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import API from "../api";
@@ -36,9 +36,9 @@ export default function ProductList() {
             <div key={product._id} className="bg-white p-4 rounded-lg shadow-md">
               <img
                 src={
-                  product.imageUrl?.startsWith("http")
-                    ? product.imageUrl
-                    : `${BASE_URL.replace("/api", "")}${product.imageUrl.replace("./", "/")}`
+                  product.image?.startsWith("http")
+                    ? product.image
+                    : `${BASE_URL.replace("/api", "")}${product.image}`
                 }
                 alt={product.name}
                 className="w-full h-48 object-cover rounded-md"
