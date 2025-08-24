@@ -36,8 +36,8 @@ export default function Products() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {products.map((product) => {
-            // ✅ Fix image path (same style as Checkout.jsx)
-            const imageUrl = product.image?.startsWith("http")
+            
+            const image= product.image?.startsWith("http")
               ? product.image
               : `${process.env.REACT_APP_API_URL.replace("/api", "")}${product.image}`;
 
