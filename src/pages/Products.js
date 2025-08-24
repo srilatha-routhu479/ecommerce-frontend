@@ -1,3 +1,4 @@
+// src/pages/ProductList.jsx
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import API from "../api";
@@ -33,6 +34,7 @@ export default function ProductList() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {products.map((product) => (
             <div key={product._id} className="bg-white p-4 rounded-lg shadow-md">
+              {/* ✅ Fix: Use product.image instead of product.imageUrl */}
               <img
                 src={
                   product.image?.startsWith("http")
@@ -58,3 +60,4 @@ export default function ProductList() {
     </div>
   );
 }
+
