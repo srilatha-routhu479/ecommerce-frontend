@@ -1,11 +1,9 @@
 // src/pages/ProductDetails.jsx
 import { useParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { toast } from "react-toastify";
 import { useCart } from "../components/contexts/CartContext";
 import API from "../utils/api";
-
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -42,9 +40,11 @@ export default function ProductDetails() {
         customText,
       });
       toast.success("Added to cart!");
+      alert("✅ Product added to cart successfully!"); // ✅ Alert message
     } catch (err) {
       console.error("❌ Error adding to cart:", err);
       toast.error("Could not add to cart");
+      alert("❌ Failed to add product to cart"); // ✅ Optional error alert
     }
   };
 
@@ -73,7 +73,6 @@ export default function ProductDetails() {
             alt={product.name}
             className="w-full max-w-md h-80 object-cover rounded-lg shadow-lg mx-auto"
           />
-
         </div>
 
         {/* Product Info */}

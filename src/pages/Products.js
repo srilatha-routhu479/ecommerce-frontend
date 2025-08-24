@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import API from "../api";
 
-const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+// ✅ Strip `/api` so we have clean base URL
+const BASE_URL = (process.env.REACT_APP_API_URL || "http://localhost:5000/api").replace("/api", "");
 
 export default function ProductList() {
   const [products, setProducts] = useState([]);
@@ -37,7 +38,7 @@ export default function ProductList() {
                 src={
                   product.imageUrl?.startsWith("http")
                     ? product.imageUrl
-                    : `${BASE_URL.replace("/api", "")}${product.imageUrl}`
+                    : `${BASE_URL}${product.imageUrl.startsWith("/") ? product.imageUrl : "/" + product.imageUrl}`
                 }
                 alt={product.name}
                 className="w-full h-48 object-cover rounded-md"
