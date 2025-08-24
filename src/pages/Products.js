@@ -1,9 +1,10 @@
+// src/pages/ProductList.jsx
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import API from "../api";
 
-// ✅ Strip `/api` so we have clean base URL
-const BASE_URL = (process.env.REACT_APP_API_URL || "http://localhost:5000/api").replace("/api", "");
+const BASE_URL =
+  process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
 export default function ProductList() {
   const [products, setProducts] = useState([]);
@@ -18,6 +19,8 @@ export default function ProductList() {
         const res = await API.get(
           category ? `/products?category=${category}` : "/products"
         );
+
+        console.log("Fetched products:", res.data); // ✅ debug image urls
         setProducts(res.data);
       } catch (err) {
         console.error("❌ Error fetching products:", err);
@@ -38,7 +41,10 @@ export default function ProductList() {
                 src={
                   product.imageUrl?.startsWith("http")
                     ? product.imageUrl
-                    : `${BASE_URL}${product.imageUrl.startsWith("/") ? product.imageUrl : "/" + product.imageUrl}`
+                    : `${process.env.REACT_APP_API_URL.replace(
+                        "/api",
+                        ""
+                      )}${product.imageUrl}`
                 }
                 alt={product.name}
                 className="w-full h-48 object-cover rounded-md"
@@ -59,3 +65,4 @@ export default function ProductList() {
     </div>
   );
 }
+
