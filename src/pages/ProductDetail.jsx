@@ -18,7 +18,7 @@ export default function ProductDetails() {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await API.get(`/products/${id}`); 
+        const res = await API.get(`/products/${id}`);
         setProduct(res.data);
       } catch (err) {
         console.error("❌ Error fetching product:", err);
@@ -65,10 +65,15 @@ export default function ProductDetails() {
         {/* Product Image */}
         <div className="flex-shrink-0">
           <img
-            src={product.image}
+            src={
+              product.imageUrl?.startsWith("http")
+                ? product.imageUrl
+                : `${process.env.REACT_APP_API_URL.replace("/api", "")}${product.imageUrl}`
+            }
             alt={product.name}
-            className="w-32 h-32 sm:w-40 sm:h-40 md:w-64 md:h-64 lg:w-72 lg:h-72 object-contain rounded-lg shadow"
+            className="w-full max-w-md h-80 object-cover rounded-lg shadow-lg mx-auto"
           />
+
         </div>
 
         {/* Product Info */}
