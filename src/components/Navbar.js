@@ -4,31 +4,45 @@ import { useState, useEffect } from "react";
 import { FaShoppingCart, FaUserCircle, FaHeart } from "react-icons/fa";
 import { useCart } from "../components/contexts/CartContext";
 import { useWishlist } from "../components/contexts/WishlistContext";
-import { getUser, isLoggedIn, logout } from "../utils/auth";
+
+// ✅ Safe helper for parsing localStorage user
+const getStoredUser = () => {
+  try {
+    const stored = localStorage.getItem("user");
+    if (!stored || stored === "undefined" || stored === "null") return null;
+    return JSON.parse(stored);
+  } catch (err) {
+    console.error("Invalid user JSON in localStorage:", err);
+    localStorage.removeItem("user"); // clear bad value
+    return null;
+  }
+};
 
 export default function Navbar() {
   const [profileOpen, setProfileOpen] = useState(false);
-  const [user, setUser] = useState(getUser());
+  const [user, setUser] = useState(null);
 
   const { cartCount } = useCart();
   const { count: wishlistCount } = useWishlist();
   const navigate = useNavigate();
 
-  // ✅ keep user synced with localStorage (also when logged in from another tab)
+  const token = localStorage.getItem("token");
+  const isLoggedIn = Boolean(token);
+
+  // ✅ keep user in sync with localStorage
   useEffect(() => {
-    const syncAuth = () => setUser(getUser());
-    window.addEventListener("storage", syncAuth);
-    return () => window.removeEventListener("storage", syncAuth);
+    setUser(getStoredUser());
   }, []);
 
+  const userName = user?.name;
+  const isAdmin = user?.role === "admin" || user?.isAdmin;
+
   const handleLogout = () => {
-    logout();
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setUser(null);
-    setProfileOpen(false);
     navigate("/login");
   };
-
-  const isAdmin = user?.role === "admin" || user?.isAdmin;
 
   return (
     <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md shadow-md">
@@ -63,7 +77,7 @@ export default function Navbar() {
           </NavLink>
 
           {/* Show My Orders only when logged in */}
-          {isLoggedIn() && (
+          {isLoggedIn && (
             <NavLink
               to="/orders"
               className={({ isActive }) =>
@@ -96,17 +110,15 @@ export default function Navbar() {
             )}
           </Link>
 
-          {/* Profile / Login */}
-          {isLoggedIn() ? (
+          {/* Profile */}
+          {isLoggedIn ? (
             <div className="relative">
               <button
                 onClick={() => setProfileOpen(!profileOpen)}
                 className="flex items-center text-gray-700 hover:text-rose-400 transition"
               >
                 <FaUserCircle className="text-2xl" />
-                {user?.name && (
-                  <span className="ml-2 font-medium">{user.name}</span>
-                )}
+                {userName && <span className="ml-2 font-medium">{userName}</span>}
               </button>
 
               {profileOpen && (

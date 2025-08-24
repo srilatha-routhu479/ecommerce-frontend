@@ -1,12 +1,14 @@
 // src/pages/Products.jsx
 import { useEffect, useState } from "react";
+import axios from "axios";
 import { Link, useLocation } from "react-router-dom";
 import { FaHeart } from "react-icons/fa";
 import { useWishlist } from "../components/contexts/WishlistContext";
 import { useCart } from "../components/contexts/CartContext";
-import API from "../utils/api"; // ✅ central axios instance
 
 // ✅ Env vars
+const API_BASE_URL =
+  process.env.REACT_APP_API_BASE_URL || "http://localhost:5000/api";
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 export default function Products() {
@@ -26,7 +28,7 @@ export default function Products() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await API.get("/products"); // ✅ no hardcoded localhost
+        const res = await axios.get(`${API_BASE_URL}/products`);
         let data = res.data || [];
 
         // if category present, filter it
@@ -87,7 +89,6 @@ export default function Products() {
         }`}
       >
         {filtered.map((p) => {
-          // ✅ build correct image path
           const imageUrl = p.image ? `${API_URL}${p.image}` : "/placeholder.png";
 
           return (
@@ -101,7 +102,6 @@ export default function Products() {
                     src={imageUrl}
                     alt={p.name || "Product"}
                     className="w-full h-40 object-cover rounded-md"
-                    onError={(e) => (e.currentTarget.src = "/placeholder.png")}
                   />
 
                   {/* Wishlist Button */}
@@ -137,6 +137,7 @@ export default function Products() {
                   >
                     View Details
                   </Link>
+                  
                 </div>
               </div>
             </div>
@@ -146,3 +147,4 @@ export default function Products() {
     </div>
   );
 }
+

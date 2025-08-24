@@ -1,84 +1,105 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import API from "../utils/api";
+// src/pages/ProductDetails.jsx
+import { useParams, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { toast } from "react-toastify";
 import { useCart } from "../components/contexts/CartContext";
-import { useWishlist } from "../components/contexts/WishlistContext";
 
-export default function ProductDetail() {
+export default function ProductDetails() {
   const { id } = useParams();
-  const navigate = useNavigate();
-  const { addToCart } = useCart();
-  const { toggle, wishlist } = useWishlist();
-
   const [product, setProduct] = useState(null);
+  const [quantity, setQuantity] = useState(1);
+  const [customText, setCustomText] = useState("");
+  const { addToCart } = useCart();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await API.get(`/products/${id}`);
+        const res = await axios.get(`http://localhost:5000/api/products/${id}`);
         setProduct(res.data);
       } catch (err) {
         console.error("❌ Error fetching product:", err);
+        toast.error("Failed to load product");
       } finally {
         setLoading(false);
       }
     };
+
     fetchProduct();
   }, [id]);
 
-  if (loading) return <div className="p-10">Loading product...</div>;
-  if (!product) return <div className="p-10">Product not found</div>;
+  const handleAddToCart = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return toast.info("Please login first");
 
-  const inWishlist = wishlist.some((item) => item._id === product._id);
+    try {
+      await addToCart({
+        productId: product._id,
+        quantity,
+        customText,
+      });
+      toast.success("Added to cart!");
+    } catch (err) {
+      console.error("❌ Error adding to cart:", err);
+      toast.error("Could not add to cart");
+    }
+  };
 
-  const src = product.imageUrl || product.image || "";
-  const image = src.startsWith("http")
-    ? src
-    : `${process.env.REACT_APP_API_URL}${src}`;
+  if (loading) return <p className="text-center mt-10">Loading...</p>;
+  if (!product) return <p className="text-center mt-10">Product not found</p>;
 
   return (
-    <div className="min-h-screen bg-gray-100 pt-24 px-4 md:px-8">
-      <div className="max-w-5xl mx-auto bg-white p-6 rounded-lg shadow-md">
-        <button
-          onClick={() => navigate(-1)}
-          className="mb-4 inline-flex items-center gap-2 text-gray-700 hover:text-indigo-600"
-        >
-          ← Back
-        </button>
+    <div className="p-6 max-w-6xl mx-auto">
+      {/* Back to Products link */}
+      <Link
+        to="/products"
+        className="text-blue-600 hover:underline text-sm mb-4 inline-block"
+      >
+        ← Back to Products
+      </Link>
 
-        <div className="grid md:grid-cols-2 gap-6">
+      <div className="flex flex-col md:flex-row gap-8 items-center md:items-start bg-white p-6 rounded-xl shadow">
+        {/* Product Image */}
+        <div className="flex-shrink-0">
           <img
-            src={image}
+            src={product.image}
             alt={product.name}
-            className="w-full h-96 object-cover rounded-md"
-            onError={(e) => (e.currentTarget.src = "/placeholder.svg")}
+            className="w-32 h-32 sm:w-40 sm:h-40 md:w-64 md:h-64 lg:w-72 lg:h-72 object-contain rounded-lg shadow"
           />
+        </div>
 
-          <div>
-            <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
-            <p className="text-gray-600 mb-4">{product.description}</p>
-            <p className="text-2xl font-semibold mb-6">₹{product.price}</p>
+        {/* Product Info */}
+        <div className="flex-1 text-center md:text-left">
+          <h2 className="text-2xl font-bold">{product.name}</h2>
+          <p className="text-gray-600 mt-2">{product.description}</p>
+          <p className="text-lg font-semibold mt-4">₹{product.price}</p>
 
-            <div className="flex gap-4">
-              <button
-                onClick={() => addToCart(product._id)}
-                className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700"
-              >
-                Add to Cart
-              </button>
-              <button
-                onClick={() => toggle(product)}
-                className={`flex-1 py-2 rounded-lg ${
-                  inWishlist
-                    ? "bg-red-500 text-white hover:bg-red-600"
-                    : "bg-fuchsia-600 text-white hover:bg-fuchsia-700"
-                }`}
-              >
-                {inWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
-              </button>
-            </div>
+          {/* Quantity & Custom Text */}
+          <div className="mt-4 flex flex-col sm:flex-row gap-4 sm:items-center">
+            <input
+              type="number"
+              min="1"
+              value={quantity}
+              onChange={(e) => setQuantity(Number(e.target.value))}
+              className="border rounded px-3 py-2 w-24 text-center"
+            />
+            <input
+              type="text"
+              placeholder="Custom Text"
+              value={customText}
+              onChange={(e) => setCustomText(e.target.value)}
+              className="border rounded px-3 py-2 flex-1"
+            />
           </div>
+
+          {/* Add to Cart Button */}
+          <button
+            onClick={handleAddToCart}
+            className="mt-6 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow"
+          >
+            Add to Cart
+          </button>
         </div>
       </div>
     </div>
