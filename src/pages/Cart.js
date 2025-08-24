@@ -2,6 +2,8 @@ import { useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useCart } from "../components/contexts/CartContext";
+import API from "../utils/api";
+
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -9,10 +11,8 @@ export default function Cart() {
 
   useEffect(() => {
     fetchCart();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Safely compute totals for either shape (item.product?.price or item.price)
   const subtotal = useMemo(() => {
     return (cartItems || []).reduce((acc, item) => {
       const price = item?.product?.price ?? item?.price ?? 0;
@@ -105,7 +105,7 @@ export default function Cart() {
               const src = product?.imageUrl || product?.image || "";
               const image = src.startsWith("http")
                 ? src
-                : `${process.env.REACT_APP_API_URL}${src}`;
+                : `${API.defaults.baseURL.replace("/api", "")}${src}`;
 
               const price = product?.price ?? item?.price ?? 0;
               const size = item?.size;

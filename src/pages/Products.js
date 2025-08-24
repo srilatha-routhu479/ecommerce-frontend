@@ -5,6 +5,7 @@ import { Link, useLocation } from "react-router-dom";
 import { FaHeart } from "react-icons/fa";
 import { useWishlist } from "../components/contexts/WishlistContext";
 import { useCart } from "../components/contexts/CartContext";
+import API from "../utils/api";  
 
 // ✅ Env vars
 const API_BASE_URL =
@@ -28,7 +29,7 @@ export default function Products() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await axios.get(`${API_BASE_URL}/products`);
+        const res = await API.get("/products"); 
         let data = res.data || [];
 
         // if category present, filter it
