@@ -1,60 +1,31 @@
-import { useEffect, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
+import React, { useEffect, useState } from "react";
 import { useCart } from "../components/contexts/CartContext";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 export default function Cart() {
+  const { cart, fetchCart, removeFromCart, updateQuantity } = useCart();
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const { cartItems, fetchCart, updateQuantity, removeFromCart } = useCart();
 
   useEffect(() => {
-    fetchCart();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const loadCart = async () => {
+      try {
+        await fetchCart();
+      } catch (err) {
+        console.error("❌ Error loading cart:", err);
+        toast.error("Failed to load cart");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadCart();
+  }, [fetchCart]);
 
-  // Safely compute totals for either shape (item.product?.price or item.price)
-  const subtotal = useMemo(() => {
-    return (cartItems || []).reduce((acc, item) => {
-      const price = item?.product?.price ?? item?.price ?? 0;
-      const qty = item?.quantity ?? 1;
-      return acc + price * qty;
-    }, 0);
-  }, [cartItems]);
+  if (loading) return <div className="p-10">Loading your cart...</div>;
 
-  const shipping = cartItems?.length ? 50 : 0;
-  const total = subtotal + shipping;
-
-  const handleMinus = async (item) => {
-    const id = item?._id || item?.id;
-    const qty = Math.max(1, (item?.quantity ?? 1) - 1);
-    try {
-      await updateQuantity(id, qty);
-    } catch {
-      toast.error("Failed to update quantity");
-    }
-  };
-
-  const handlePlus = async (item) => {
-    const id = item?._id || item?.id;
-    const qty = (item?.quantity ?? 1) + 1;
-    try {
-      await updateQuantity(id, qty);
-    } catch {
-      toast.error("Failed to update quantity");
-    }
-  };
-
-  const handleRemove = async (item) => {
-    const id = item?._id || item?.id;
-    try {
-      await removeFromCart(id);
-      toast.success("Removed from cart");
-    } catch {
-      toast.error("Failed to remove item");
-    }
-  };
-
-  if (!cartItems || cartItems.length === 0) {
+  if (!cart || cart.items?.length === 0) {
     return (
       <div className="min-h-screen bg-gray-100 pt-24 px-4 md:px-8">
         <div className="max-w-5xl mx-auto">
@@ -67,12 +38,12 @@ export default function Cart() {
 
           <div className="text-center py-12 bg-white rounded-lg shadow-md">
             <h1 className="text-2xl font-bold mb-2">Your cart is empty 🛒</h1>
-            <p className="text-gray-600">Let’s find something you’ll love.</p>
+            <p className="text-gray-600">Add some products to continue shopping.</p>
             <Link
               to="/products"
-              className="mt-4 inline-block px-6 py-2 rounded-lg bg-fuchsia-600 text-white hover:bg-fuchsia-700"
+              className="mt-4 inline-block px-6 py-2 rounded-lg bg-orange-600 text-white hover:bg-orange-700"
             >
-              Continue Shopping
+              Browse Products
             </Link>
           </div>
         </div>
@@ -80,10 +51,14 @@ export default function Cart() {
     );
   }
 
+  const total = cart.items.reduce(
+    (acc, item) => acc + item.product.price * item.quantity,
+    0
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-100 via-orange-100 to-yellow-500 pt-24 px-4 md:px-8">
       <div className="max-w-6xl mx-auto">
-        {/* Back Button */}
         <button
           onClick={() => navigate(-1)}
           className="mb-4 inline-flex items-center gap-2 text-gray-700 hover:text-indigo-600"
@@ -91,101 +66,75 @@ export default function Cart() {
           ← Back
         </button>
 
-        <h1 className="text-3xl font-bold mb-6">Your Cart</h1>
+        <h1 className="text-3xl font-bold mb-6">My Cart 🛒</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Items */}
-          <div className="lg:col-span-2 space-y-4">
-            {cartItems.map((item) => {
-              const key = item?._id || item?.id;
-              const product = item?.product || item;
-              const name = product?.name || "Product";
-
-              // ✅ FIXED IMAGE PATH
-              const src = product?.imageUrl || product?.image || "";
+          {/* Cart Items */}
+          <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
+            {cart.items.map((item) => {
+              const src = item.product?.imageUrl || item.product?.image || "";
               const image = src.startsWith("http")
                 ? src
                 : `${process.env.REACT_APP_API_URL}${src}`;
 
-              const price = product?.price ?? item?.price ?? 0;
-              const size = item?.size;
-              const color = item?.color;
-              const qty = item?.quantity ?? 1;
-
               return (
                 <div
-                  key={key}
-                  className="flex items-center bg-amber-50 p-4 rounded-lg shadow-md"
+                  key={item._id}
+                  className="flex items-center gap-4 border-b py-4"
                 >
                   <img
                     src={image}
-                    alt={name}
-                    className="w-24 h-24 object-cover rounded-lg"
-                    onError={(e) => {
-                      if (e.currentTarget.src.endsWith("/placeholder.svg"))
-                        return;
-                      e.currentTarget.src = "/placeholder.svg";
-                    }}
+                    alt={item.product.name}
+                    className="w-24 h-24 object-cover rounded-md"
+                    onError={(e) => (e.currentTarget.src = "/placeholder.svg")}
                   />
+                  <div className="flex-1">
+                    <h2 className="font-semibold text-lg">
+                      {item.product.name}
+                    </h2>
+                    <p className="text-gray-600">₹{item.product.price}</p>
 
-                  <div className="ml-4 flex-1">
-                    <h2 className="text-lg font-semibold">{name}</h2>
-                    <p className="text-gray-600">₹{price}</p>
-                    <div className="text-sm text-gray-500">
-                      {size && <span>Size: {size}</span>}
-                      {size && color && <span> • </span>}
-                      {color && <span>Color: {color}</span>}
-                    </div>
-
+                    {/* Quantity controls */}
                     <div className="flex items-center gap-3 mt-2">
                       <button
-                        onClick={() => handleMinus(item)}
-                        className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                        onClick={() =>
+                          updateQuantity(item.product._id, item.quantity - 1)
+                        }
+                        className="px-2 py-1 bg-gray-300 rounded"
+                        disabled={item.quantity <= 1}
                       >
                         -
                       </button>
-                      <span className="px-2">{qty}</span>
+                      <span>{item.quantity}</span>
                       <button
-                        onClick={() => handlePlus(item)}
-                        className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                        onClick={() =>
+                          updateQuantity(item.product._id, item.quantity + 1)
+                        }
+                        className="px-2 py-1 bg-gray-300 rounded"
                       >
                         +
                       </button>
                     </div>
                   </div>
-
                   <button
-                    onClick={() => handleRemove(item)}
-                    className="ml-4 text-red-500 hover:text-red-700"
+                    onClick={() => removeFromCart(item.product._id)}
+                    className="text-red-500 hover:text-red-700"
                   >
-                    ✕
+                    Remove
                   </button>
                 </div>
               );
             })}
           </div>
 
-          {/* Summary */}
-          <div className="bg-amber-50 p-6 rounded-lg shadow-md h-fit">
-            <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
-            <div className="flex justify-between mb-2">
-              <span>Subtotal</span>
-              <span>₹{subtotal}</span>
-            </div>
-            <div className="flex justify-between mb-2">
-              <span>Shipping</span>
-              <span>₹{shipping}</span>
-            </div>
-            <div className="flex justify-between font-bold text-lg mt-4 border-t pt-2">
-              <span>Total</span>
-              <span>₹{total}</span>
-            </div>
-
-            <button
-              className="mt-6 w-full bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700"
-              onClick={() => navigate("/checkout")}
-            >
-              Checkout
+          {/* Cart Summary */}
+          <div className="bg-white p-6 rounded-lg shadow-md h-fit">
+            <h2 className="text-xl font-bold mb-4">Summary</h2>
+            <p className="text-lg">
+              Total: <span className="font-semibold">₹{total}</span>
+            </p>
+            <button className="mt-4 w-full bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700">
+              Proceed to Checkout
             </button>
           </div>
         </div>
@@ -193,3 +142,4 @@ export default function Cart() {
     </div>
   );
 }
+

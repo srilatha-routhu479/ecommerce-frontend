@@ -1,22 +1,22 @@
-// src/pages/ProductDetails.jsx
-import { useParams, Link } from "react-router-dom";
-import { useEffect, useState } from "react";
-import axios from "axios";
-import { toast } from "react-toastify";
-import { useCart } from "../components/contexts/CartContext"; 
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import API from "../utils/api";
+import { useCart } from "../components/contexts/CartContext";
+import { useWishlist } from "../components/contexts/WishlistContext";
 
-export default function ProductDetails() {
+export default function ProductDetail() {
   const { id } = useParams();
-  const [product, setProduct] = useState(null);
-  const [quantity, setQuantity] = useState(1);
-  const [customText, setCustomText] = useState("");
+  const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { toggle, wishlist } = useWishlist();
+
+  const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/products/${id}`);
+        const res = await API.get(`/products/${id}`);
         setProduct(res.data);
       } catch (err) {
         console.error("❌ Error fetching product:", err);
@@ -24,95 +24,61 @@ export default function ProductDetails() {
         setLoading(false);
       }
     };
-
     fetchProduct();
   }, [id]);
 
- const handleAddToCart = async () => {
-  const token = localStorage.getItem("token");
-  if (!token) return toast.info("Please login first");
-
-  try {
-    await addToCart({
-      productId: product._id,
-      quantity,
-      customText, // ✅ only sending what exists
-    });
-    toast.success("Added to cart!");
-  } catch (err) {
-    console.error(err);
-    const msg =
-      err?.response?.data?.message ||
-      err?.message ||
-      "Failed to add to cart";
-    toast.error(msg);
-  }
-};
-
-  if (loading) return <div className="p-10">Loading...</div>;
+  if (loading) return <div className="p-10">Loading product...</div>;
   if (!product) return <div className="p-10">Product not found</div>;
 
-  const image =
-    product.image || product.imageUrl || "/placeholder.svg"; // ✅ fallback
+  const inWishlist = wishlist.some((item) => item._id === product._id);
+
+  const src = product.imageUrl || product.image || "";
+  const image = src.startsWith("http")
+    ? src
+    : `${process.env.REACT_APP_API_URL}${src}`;
 
   return (
-    <div className="w-full h-full bg-gradient-to-br from-amber-100 via-orange-100 to-yellow-500 mx-auto px-4 py-20">
-      <Link
-        to="/products"
-        className="mb-4 inline-block text-gray-600 hover:text-red-600 text-lg"
-      >
-        ✕ Close
-      </Link>
+    <div className="min-h-screen bg-gray-100 pt-24 px-4 md:px-8">
+      <div className="max-w-5xl mx-auto bg-white p-6 rounded-lg shadow-md">
+        <button
+          onClick={() => navigate(-1)}
+          className="mb-4 inline-flex items-center gap-2 text-gray-700 hover:text-indigo-600"
+        >
+          ← Back
+        </button>
 
-      <div className="grid md:grid-cols-2 gap-8">
-        <img
-          src={image}
-          alt={product.name}
-          className="w-full rounded-lg object-cover"
-          onError={(e) => (e.currentTarget.src = "/placeholder.svg")}
-        />
-
-        <div>
-          <h1 className="text-3xl font-bold">{product.name}</h1>
-          <p className="text-gray-600 mt-2">{product.description}</p>
-          <p className="font-semibold mt-4 text-lg">₹{product.price}</p>
-
-          {/* Quantity */}
-          <label className="block mt-6 font-medium">Quantity</label>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-              className="px-3 py-1 bg-gray-300 rounded"
-            >
-              -
-            </button>
-            <span className="px-4">{quantity}</span>
-            <button
-              onClick={() => setQuantity((q) => q + 1)}
-              className="px-3 py-1 bg-gray-300 rounded"
-            >
-              +
-            </button>
-          </div>
-
-          {/* Custom Text */}
-          <label className="block mt-4 font-medium">
-            Custom Text (optional)
-          </label>
-          <input
-            type="text"
-            value={customText}
-            onChange={(e) => setCustomText(e.target.value)}
-            className="w-full px-3 py-2 rounded border"
-            placeholder="Enter custom text"
+        <div className="grid md:grid-cols-2 gap-6">
+          <img
+            src={image}
+            alt={product.name}
+            className="w-full h-96 object-cover rounded-md"
+            onError={(e) => (e.currentTarget.src = "/placeholder.svg")}
           />
 
-          <button
-            onClick={handleAddToCart}
-            className="mt-6 w-full bg-orange-600 text-white py-3 rounded hover:bg-indigo-700"
-          >
-            Add to Cart
-          </button>
+          <div>
+            <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
+            <p className="text-gray-600 mb-4">{product.description}</p>
+            <p className="text-2xl font-semibold mb-6">₹{product.price}</p>
+
+            <div className="flex gap-4">
+              <button
+                onClick={() => addToCart(product._id)}
+                className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700"
+              >
+                Add to Cart
+              </button>
+              <button
+                onClick={() => toggle(product)}
+                className={`flex-1 py-2 rounded-lg ${
+                  inWishlist
+                    ? "bg-red-500 text-white hover:bg-red-600"
+                    : "bg-fuchsia-600 text-white hover:bg-fuchsia-700"
+                }`}
+              >
+                {inWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
