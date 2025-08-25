@@ -1,12 +1,11 @@
 // src/pages/Products.js
 import React, { useEffect, useState } from "react";
-import API from "../utils/api"; // ✅ make sure api.js is inside src/utils/
+import API from "../utils/api";
 import { Link } from "react-router-dom";
 
 const Products = () => {
   const [products, setProducts] = useState([]);
 
-  // Fetch products on mount
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -18,6 +17,13 @@ const Products = () => {
     };
     fetchProducts();
   }, []);
+
+  const getImageUrl = (image) => {
+    if (!image) return "/placeholder.png";
+    return image.startsWith("http")
+      ? image
+      : `https://ecommerce-backend-2-g9wx.onrender.com${image}`;
+  };
 
   return (
     <div className="min-h-screen p-6 bg-gray-100">
@@ -32,9 +38,8 @@ const Products = () => {
               key={product._id}
               className="bg-white shadow-md rounded-xl overflow-hidden hover:shadow-lg transition"
             >
-              {/* ✅ Fix: Use product.image not imageUrl */}
               <img
-                src={product.image || "/placeholder.png"} 
+                src={getImageUrl(product.image)}
                 alt={product.name}
                 className="w-full h-48 object-cover"
               />
@@ -64,3 +69,4 @@ const Products = () => {
 };
 
 export default Products;
+;
