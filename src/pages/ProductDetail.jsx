@@ -1,11 +1,9 @@
 // src/pages/ProductDetails.jsx
 import { useParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { toast } from "react-toastify";
 import { useCart } from "../components/contexts/CartContext";
 import API from "../utils/api";
-
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -14,6 +12,12 @@ export default function ProductDetails() {
   const [customText, setCustomText] = useState("");
   const { addToCart } = useCart();
   const [loading, setLoading] = useState(true);
+
+  // ✅ Safe API base (fallback if env is missing)
+  const API_BASE =
+    (process.env.REACT_APP_API_URL &&
+      process.env.REACT_APP_API_URL.replace("/api", "")) ||
+    "http://localhost:5000";
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -64,15 +68,15 @@ export default function ProductDetails() {
       <div className="flex flex-col md:flex-row gap-8 items-center md:items-start bg-white p-6 rounded-xl shadow">
         {/* Product Image */}
         <div className="flex-shrink-0">
-          <img
-            src={
-              product.imageUrl?.startsWith("http")
-                ? product.imageUrl
-                : `${process.env.REACT_APP_API_URL.replace("/api", "")}${product.imageUrl}`
-            }
-            alt={product.name}
-            className="w-full max-w-md h-80 object-cover rounded-lg shadow-lg mx-auto"
-          />
+         <img
+  src={
+    product.image?.startsWith("http")
+      ? product.image
+      : `http://localhost:5000${product.image}`
+  }
+  alt={product.name}
+  className="w-full max-w-md h-80 object-cover rounded-lg shadow-lg mx-auto"
+/>
 
         </div>
 
@@ -112,3 +116,4 @@ export default function ProductDetails() {
     </div>
   );
 }
+

@@ -9,6 +9,8 @@ const API = "http://localhost:5000/api";
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
   const [cartCount, setCartCount] = useState(0);
+  const [cart, setCart] = useState([]); 
+
 
   const getToken = () => localStorage.getItem("token");
   const buildAuth = () => {

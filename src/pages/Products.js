@@ -1,67 +1,66 @@
-// src/pages/Products.jsx
-import { useEffect, useState } from "react";
+// src/pages/Products.js
+import React, { useEffect, useState } from "react";
+import API from "../utils/api"; // ✅ make sure api.js is inside src/utils/
 import { Link } from "react-router-dom";
-import axios from "axios";
-import { toast } from "react-toastify";
-import API from "../utils/api";
 
-export default function Products() {
+const Products = () => {
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
 
+  // Fetch products on mount
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await API.get("/products");
-        setProducts(res.data);
+        const { data } = await API.get("/products");
+        setProducts(data);
       } catch (err) {
         console.error("❌ Error fetching products:", err);
-        toast.error("Failed to load products");
-      } finally {
-        setLoading(false);
       }
     };
-
     fetchProducts();
   }, []);
 
-  if (loading) return <p className="text-center mt-10">Loading...</p>;
-
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Products</h1>
+    <div className="min-h-screen p-6 bg-gray-100">
+      <h1 className="text-3xl font-bold mb-6 text-center">Products</h1>
 
       {products.length === 0 ? (
-        <p>No products available</p>
+        <p className="text-center text-gray-600">No products available.</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {products.map((product) => {
-            
-            const image= product.image?.startsWith("http")
-              ? product.image
-              : `${process.env.REACT_APP_API_URL.replace("/api", "")}${product.image}`;
+        <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {products.map((product) => (
+            <div
+              key={product._id}
+              className="bg-white shadow-md rounded-xl overflow-hidden hover:shadow-lg transition"
+            >
+              {/* ✅ Fix: Use product.image not imageUrl */}
+              <img
+                src={product.image || "/placeholder.png"} 
+                alt={product.name}
+                className="w-full h-48 object-cover"
+              />
 
-            return (
-              <div
-                key={product._id}
-                className="bg-white p-4 rounded-xl shadow hover:shadow-lg transition"
-              >
-                <Link to={`/products/${product._id}`}>
-                  <img
-                    src={imageUrl}
-                    alt={product.name}
-                    className="w-full h-56 object-cover rounded-lg"
-                  />
-                  <h2 className="mt-4 text-lg font-semibold">{product.name}</h2>
-                  <p className="text-gray-600 mt-1">₹{product.price}</p>
+              <div className="p-4">
+                <h2 className="text-lg font-semibold">{product.name}</h2>
+                <p className="text-gray-500 mb-2">
+                  {product.description || "No description"}
+                </p>
+                <p className="text-xl font-bold text-blue-600">
+                  ₹{product.price}
+                </p>
+
+                <Link
+                  to={`/product/${product._id}`}
+                  className="mt-3 inline-block bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
+                >
+                  View Details
                 </Link>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       )}
     </div>
   );
-}
+};
 
-
+export default Products;

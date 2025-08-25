@@ -1,6 +1,8 @@
 // App.jsx
 import { useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
+import { ToastContainer } from "react-toastify";  // ✅ Make sure this is imported
+import "react-toastify/dist/ReactToastify.css";
 
 import Home from "./pages/Home";
 import Navbar from "./components/Navbar";
@@ -34,6 +36,7 @@ function App() {
   return (
     <>
       <Navbar />
+
       <Routes>
         <Route path="/" element={<Home />} />
 
@@ -45,7 +48,7 @@ function App() {
           }
         />
 
-        <Route path="/products/:id" element={<ProductDetail />} />
+        <Route path="/product/:id" element={<ProductDetail />} />
         <Route path="/products" element={<ProductList />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -56,8 +59,23 @@ function App() {
         <Route path="/orders" element={<Orders />} />
         <Route path="/order-success" element={<OrderSuccess />} />
       </Routes>
+
+      {/* ✅ ToastContainer must be OUTSIDE Routes */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
     </>
   );
 }
 
 export default App;
+
