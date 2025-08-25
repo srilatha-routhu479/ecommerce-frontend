@@ -18,11 +18,12 @@ const Products = () => {
     fetchProducts();
   }, []);
 
+  // ✅ Load images from frontend/public/images
   const getImageUrl = (image) => {
-    if (!image) return "/placeholder.png";
+    if (!image) return "/placeholder.png"; // fallback if no image
     return image.startsWith("http")
       ? image
-      : `https://ecommerce-backend-2-g9wx.onrender.com${image}`;
+      : `/images/${image.replace("/images/", "")}`;
   };
 
   return (
@@ -69,4 +70,3 @@ const Products = () => {
 };
 
 export default Products;
-;
