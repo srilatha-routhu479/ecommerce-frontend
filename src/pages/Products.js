@@ -18,12 +18,11 @@ const Products = () => {
     fetchProducts();
   }, []);
 
-  // ✅ Load images from frontend/public/images
+  // Since DB stores image as "/images/filename.jpg"
+  // and images are inside frontend/public/images
   const getImageUrl = (image) => {
-    if (!image) return "/placeholder.png"; // fallback if no image
-    return image.startsWith("http")
-      ? image
-      : `/images/${image.replace("/images/", "")}`;
+    if (!image) return "/placeholder.png"; // fallback image
+    return image; // directly use path (works on Vercel)
   };
 
   return (
